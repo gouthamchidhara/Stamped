@@ -20,12 +20,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export const useAuth = () => useContext(AuthContext);
 
-// Magic-link sign in. Supabase emails a link that deep-links back via the 'stamped://' scheme.
-export async function sendMagicLink(email: string) {
+// OTP sign in. Supabase emails a 6-digit code (no deep link / browser needed on mobile).
+// Requires the Supabase email template to include {{ .Token }}.
+export async function sendOtpCode(email: string) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: 'stamped://auth-callback' },
+    options: { shouldCreateUser: true },
   });
+  if (error) throw error;
+}
+
+// Verifies the 6-digit code and establishes the session.
+export async function verifyOtpCode(email: string, token: string) {
+  const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
   if (error) throw error;
 }
 
