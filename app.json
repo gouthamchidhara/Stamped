@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "Stamped",
+    "slug": "stamped",
+    "version": "1.0.0",
+    "scheme": "stamped",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": { "supportsTablet": false, "bundleIdentifier": "com.goutham.stamped" },
+    "android": { "package": "com.goutham.stamped", "edgeToEdgeEnabled": true },
+    "plugins": ["expo-router"]
+  }
+}
