@@ -103,3 +103,7 @@ join case_status_events approved
   on approved.case_id = c.id and approved.status in ('Case Approved', 'Card Was Mailed')
 group by c.form_type
 having count(*) >= 10;  -- privacy floor
+
+-- ============ ADDED FOR USCIS POLLING + PUSH ============
+alter table profiles add column if not exists expo_push_token text;
+-- cases.current_status, step_idx, last_checked_at already exist above.

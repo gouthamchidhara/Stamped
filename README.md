@@ -62,3 +62,22 @@ supabase/schema.sql        Full schema with RLS + crowdsourced medians view
 3. Edge Function for USCIS polling + push notifications
 4. Crowdsourced medians view → Times tab
 5. EAS build → TestFlight + Play internal testing
+
+## What's wired now (v1)
+
+- **Auth**: email magic link (`app/sign-in.tsx`, `lib/auth.tsx`). First launch shows disclaimer → sign-in → app.
+- **Real Supabase data**: `lib/db.ts` + `lib/store.ts` hooks. Cases, posts, votes, comments all hit the live DB with RLS.
+- **USCIS poller**: `supabase/functions/poll-uscis/` — OAuth token, status fetch, change detection, Expo push.
+
+### Deploy the poller
+```bash
+supabase functions deploy poll-uscis
+supabase secrets set USCIS_CLIENT_ID=xxx USCIS_CLIENT_SECRET=xxx
+# SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided to Edge Functions automatically.
+supabase functions schedule create poll-uscis --cron "0 */6 * * *"   # 4x/day
+```
+
+### Before the poller returns real data
+Confirm two things in the USCIS sandbox "Try It" console, then update `poll-uscis/index.ts`:
+1. The exact case-status endpoint path (placeholder: `/case-status/{receipt}`)
+2. The exact JSON field name for status (placeholder tries `caseStatus` then `status`)

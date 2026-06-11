@@ -1,23 +1,28 @@
 import { useState } from 'react';
-import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Modal, Pressable, RefreshControl, Text, TextInput, View } from 'react-native';
 import { T } from '@/lib/theme';
-import { actions, useStore } from '@/lib/store';
+import { useCases } from '@/lib/store';
 import { validateReceipt } from '@/lib/validate';
 import CaseCard from '@/components/CaseCard';
 
 export default function CasesScreen() {
-  const { cases } = useStore();
+  const { cases, loading, error, reload, add } = useCases();
   const [show, setShow] = useState(false);
   const [receipt, setReceipt] = useState('');
   const [nick, setNick] = useState('');
+  const [formErr, setFormErr] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const [error, setError] = useState('');
-  const add = () => {
+  const submit = async () => {
     const v = validateReceipt(receipt);
-    if (!v.ok) { setError(v.error ?? 'Invalid receipt number'); return; }
-    actions.addCase(v.value, nick.trim());
-    setReceipt(''); setNick(''); setError(''); setShow(false);
+    if (!v.ok) { setFormErr(v.error ?? 'Invalid receipt number'); return; }
+    setSaving(true); setFormErr('');
+    try { await add(v.value, nick.trim()); setReceipt(''); setNick(''); setShow(false); }
+    catch (e: any) { setFormErr(e.message ?? 'Could not add case'); }
+    finally { setSaving(false); }
   };
+
+  if (loading) return <View style={{ flex: 1, backgroundColor: T.paper, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator color={T.navy} /></View>;
 
   return (
     <View style={{ flex: 1, backgroundColor: T.paper }}>
@@ -25,6 +30,14 @@ export default function CasesScreen() {
         data={cases}
         keyExtractor={(c) => c.id}
         contentContainerStyle={{ padding: 16 }}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={reload} />}
+        ListEmptyComponent={
+          <View style={{ padding: 24, alignItems: 'center' }}>
+            <Text style={{ color: T.inkSoft, fontSize: 14, textAlign: 'center' }}>
+              {error ? `Couldn't load cases: ${error}` : 'No cases yet. Add your first receipt number below.'}
+            </Text>
+          </View>
+        }
         renderItem={({ item }) => <CaseCard c={item} />}
         ListFooterComponent={
           <Pressable onPress={() => setShow(true)} style={{ borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#B9C3D6', borderRadius: T.radius, padding: 14, alignItems: 'center' }}>
@@ -42,15 +55,15 @@ export default function CasesScreen() {
           <TextInput
             value={receipt} onChangeText={setReceipt} placeholder="IOE0000000000"
             autoCapitalize="characters" maxLength={13}
-            style={{ borderWidth: 1, borderColor: error ? T.red : T.line, borderRadius: 11, padding: 12, fontFamily: T.mono, letterSpacing: 1.5, marginBottom: 4 }}
+            style={{ borderWidth: 1, borderColor: formErr ? T.red : T.line, borderRadius: 11, padding: 12, fontFamily: T.mono, letterSpacing: 1.5, marginBottom: 4 }}
           />
-          {error ? <Text style={{ color: T.red, fontSize: 12, marginBottom: 8 }}>{error}</Text> : <Text style={{ marginBottom: 8 }} />}
+          {formErr ? <Text style={{ color: T.red, fontSize: 12, marginBottom: 8 }}>{formErr}</Text> : <View style={{ marginBottom: 8 }} />}
           <TextInput
             value={nick} onChangeText={setNick} placeholder="Nickname (e.g. My green card)"
             style={{ borderWidth: 1, borderColor: T.line, borderRadius: 11, padding: 12, marginBottom: 11 }}
           />
-          <Pressable onPress={add} style={{ backgroundColor: T.navy, borderRadius: 12, padding: 14, alignItems: 'center' }}>
-            <Text style={{ color: '#fff', fontWeight: '600', fontSize: 15 }}>Start tracking</Text>
+          <Pressable onPress={submit} disabled={saving} style={{ backgroundColor: T.navy, borderRadius: 12, padding: 14, alignItems: 'center', opacity: saving ? 0.6 : 1 }}>
+            {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '600', fontSize: 15 }}>Start tracking</Text>}
           </Pressable>
         </View>
       </Modal>

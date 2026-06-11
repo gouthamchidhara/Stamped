@@ -11,7 +11,7 @@ export default function Welcome() {
   const accept = async () => {
     setBusy(true);
     await AsyncStorage.setItem('disclaimer_accepted_v1', new Date().toISOString());
-    router.replace('/(tabs)');
+    router.replace('/sign-in');
   };
 
   return (
