@@ -14,7 +14,19 @@
         "ITSAppUsesNonExemptEncryption": false
       }
     },
-    "android": { "package": "com.goutham.stamped", "edgeToEdgeEnabled": true },
-    "plugins": ["expo-router"]
+    "android": {
+      "package": "com.goutham.stamped",
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e537ce06-afe8-4e03-8a60-ebf492fbc8ed"
+      }
+    },
+    "owner": "gchid"
   }
 }
