@@ -14,5 +14,9 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    // PKCE returns the magic link as a ?code= query param, which survives the
+    // browser→app deep-link handoff (the implicit flow's #fragment does not).
+    // We complete it manually with exchangeCodeForSession (see lib/auth.tsx).
+    flowType: 'pkce',
   },
 });

@@ -12,16 +12,20 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const USCIS_AUTH_URL = 'https://api-int.uscis.gov/oauth/accesstoken';
 const USCIS_CASE_URL = 'https://api-int.uscis.gov/case-status'; // GET /case-status/{receiptNumber} — verified
 
+// Steps per form type — must match STEP_LABELS in the app (components/CaseCard.tsx).
+const FORM_STEP_COUNT: Record<string, number> = { 'I-485': 6, 'I-765': 4, 'I-130': 3 };
+
 // Map a USCIS status string to our step index for the timeline.
 function stepIndexFor(form: string, status: string): number {
   const s = status.toLowerCase();
-  if (s.includes('approved')) return 5;
-  if (s.includes('card') && s.includes('produced')) return 4;
-  if (s.includes('card') && s.includes('mailed')) return 4;
-  if (s.includes('interview')) return 3;
-  if (s.includes('actively') || s.includes('being reviewed')) return 2;
-  if (s.includes('biometric') || s.includes('fingerprint')) return 1;
-  return 0;
+  const max = (FORM_STEP_COUNT[form] ?? 6) - 1;
+  let idx = 0;
+  if (s.includes('approved')) idx = 5;
+  else if (s.includes('card') && (s.includes('produced') || s.includes('mailed'))) idx = 4;
+  else if (s.includes('interview')) idx = 3;
+  else if (s.includes('actively') || s.includes('being reviewed')) idx = 2;
+  else if (s.includes('biometric') || s.includes('fingerprint')) idx = 1;
+  return Math.min(idx, max);
 }
 
 async function getToken(): Promise<string> {

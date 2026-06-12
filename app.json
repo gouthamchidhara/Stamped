@@ -6,8 +6,40 @@
     "scheme": "stamped",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "ios": { "supportsTablet": false, "bundleIdentifier": "com.goutham.stamped" },
-    "android": { "package": "com.goutham.stamped", "edgeToEdgeEnabled": true },
-    "plugins": ["expo-router"]
+    "icon": "./assets/icon.png",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.goutham.stamped",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.goutham.stamped",
+      "edgeToEdgeEnabled": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1B2B4D"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "backgroundColor": "#1B2B4D"
+        }
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e537ce06-afe8-4e03-8a60-ebf492fbc8ed"
+      }
+    },
+    "owner": "gchid"
   }
 }

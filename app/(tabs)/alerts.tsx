@@ -11,13 +11,15 @@ export default function AlertsScreen() {
   const router = useRouter();
   const [events, setEvents] = useState<EventRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState('');
 
   const load = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('case_status_events')
       .select('status, occurred_at, created_at, cases!inner(nickname, form_type)')
       .order('created_at', { ascending: false })
       .limit(30);
+    setErr(error?.message ?? '');
     setEvents((data as unknown as EventRow[]) ?? []);
     setLoading(false);
   };
@@ -37,10 +39,13 @@ export default function AlertsScreen() {
       refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}>
       {events.length === 0 ? (
         <View style={{ backgroundColor: T.card, borderWidth: 1, borderColor: T.line, borderRadius: 12, padding: 18, marginBottom: 14 }}>
-          <Text style={{ fontSize: 14, fontWeight: '600', color: T.ink, marginBottom: 6 }}>No updates yet</Text>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: T.ink, marginBottom: 6 }}>
+            {err ? "Couldn't load updates" : 'No updates yet'}
+          </Text>
           <Text style={{ fontSize: 13, color: T.inkSoft, lineHeight: 20 }}>
-            When USCIS updates the status of a case you're tracking, the change appears here and you'll
-            receive a push notification. Statuses are checked automatically several times a day.
+            {err
+              ? `${err}\nPull down to try again.`
+              : "When USCIS updates the status of a case you're tracking, the change appears here. Statuses are checked automatically several times a day."}
           </Text>
         </View>
       ) : (

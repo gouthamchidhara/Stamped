@@ -28,13 +28,21 @@ export async function createCase(receiptRaw: string, nickname: string, formType:
 export async function fetchPosts(filter: string) {
   let q = supabase
     .from('posts')
-    .select('*, comments(count), votes(count), profiles(display_name, avatar_color)')
+    .select('*, comments(count), votes(count)')
     .order('created_at', { ascending: false });
   if (filter === 'news') q = q.eq('is_news', true);
   else if (filter !== 'all') q = q.eq('tag', filter);
   const { data, error } = await q;
   if (error) throw error;
-  return data;
+  const posts = data ?? [];
+  if (posts.length === 0) return posts;
+  // posts.user_id references auth.users, not profiles, so PostgREST can't embed
+  // the author — join client-side instead.
+  const ids = [...new Set(posts.map((p) => p.user_id))];
+  const { data: profs } = await supabase
+    .from('profiles').select('id, display_name, avatar_color').in('id', ids);
+  const byId = new Map((profs ?? []).map((p) => [p.id, p]));
+  return posts.map((p) => ({ ...p, profiles: byId.get(p.user_id) ?? null }));
 }
 
 export async function createPost(title: string, body: string, tag: string) {

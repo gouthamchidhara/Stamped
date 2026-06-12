@@ -20,7 +20,8 @@ function stampFor(stepIdx: number, total: number): { kind: keyof typeof stampSty
 export default function CaseCard({ c }: { c: any }) {
   const router = useRouter();
   const steps = STEP_LABELS[c.form_type] ?? STEP_LABELS['I-485'];
-  const stepIdx = c.step_idx ?? 0;
+  // The poller writes step indices on an I-485 scale (0-5); clamp for shorter forms.
+  const stepIdx = Math.min(c.step_idx ?? 0, steps.length - 1);
   const pct = Math.round(((stepIdx + 1) / steps.length) * 100);
   const stamp = stampFor(stepIdx, steps.length);
   const s = stampStyles[stamp.kind];

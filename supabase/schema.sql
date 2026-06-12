@@ -107,3 +107,20 @@ having count(*) >= 10;  -- privacy floor
 -- ============ ADDED FOR USCIS POLLING + PUSH ============
 alter table profiles add column if not exists expo_push_token text;
 -- cases.current_status, step_idx, last_checked_at already exist above.
+
+-- ============ MIGRATION (run in SQL editor if not yet applied) ============
+-- Auto-create a profile on signup. Community posts and push notifications both
+-- need a profiles row; the app also upserts one on sign-in as a fallback.
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.profiles (id, display_name)
+  values (new.id, coalesce(nullif(split_part(new.email, '@', 1), ''), 'Member'))
+  on conflict (id) do nothing;
+  return new;
+end $$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();

@@ -26,7 +26,7 @@ export default function CaseDetail() {
   if (!c) return <View style={{ flex: 1, backgroundColor: T.paper, padding: 20 }}><Text style={{ color: T.inkSoft }}>Case not found.</Text></View>;
 
   const steps = STEP_LABELS[c.form_type] ?? STEP_LABELS['I-485'];
-  const stepIdx = c.step_idx ?? 0;
+  const stepIdx = Math.min(c.step_idx ?? 0, steps.length - 1);
   const days = c.filed_at ? Math.max(1, Math.round((Date.now() - new Date(c.filed_at).getTime()) / 86400000)) : '—';
   const events: any[] = c.case_status_events ?? [];
 

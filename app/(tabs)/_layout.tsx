@@ -24,7 +24,7 @@ export default function TabLayout() {
       }} />
       <Tabs.Screen name="community" options={{ title: 'Community', tabBarIcon: icon('💬') }} />
       <Tabs.Screen name="times" options={{ title: 'Times', headerTitle: 'Processing times', tabBarIcon: icon('⏱') }} />
-      <Tabs.Screen name="alerts" options={{ title: 'Alerts', tabBarIcon: icon('🔔'), tabBarBadge: 3 }} />
+      <Tabs.Screen name="alerts" options={{ title: 'Alerts', tabBarIcon: icon('🔔') }} />
     </Tabs>
   );
 }
