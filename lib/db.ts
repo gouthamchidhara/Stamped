@@ -11,7 +11,7 @@ export async function fetchCases() {
   return data;
 }
 
-export async function createCase(receiptRaw: string, nickname: string, formType = 'I-485') {
+export async function createCase(receiptRaw: string, nickname: string, formType: string) {
   const v = validateReceipt(receiptRaw);
   if (!v.ok) throw new Error(v.error);
   const { data: { user } } = await supabase.auth.getUser();

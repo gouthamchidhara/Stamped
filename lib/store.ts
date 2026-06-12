@@ -17,8 +17,8 @@ export function useCases() {
 
   useEffect(() => { load(); }, [load]);
 
-  const add = async (receipt: string, nick: string) => {
-    await db.createCase(receipt, nick);
+  const add = async (receipt: string, nick: string, formType: string) => {
+    await db.createCase(receipt, nick, formType);
     await load();
   };
 

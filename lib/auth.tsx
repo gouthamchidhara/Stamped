@@ -20,19 +20,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export const useAuth = () => useContext(AuthContext);
 
-// OTP sign in. Supabase emails a 6-digit code (no deep link / browser needed on mobile).
-// Requires the Supabase email template to include {{ .Token }}.
-export async function sendOtpCode(email: string) {
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { shouldCreateUser: true },
-  });
+// Email + password auth — no email delivery needed to sign in, so no SMTP dependency.
+export async function signUp(email: string, password: string) {
+  const { error } = await supabase.auth.signUp({ email, password });
   if (error) throw error;
 }
 
-// Verifies the 6-digit code and establishes the session.
-export async function verifyOtpCode(email: string, token: string) {
-  const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+export async function signIn(email: string, password: string) {
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
 }
 

@@ -1,28 +1,69 @@
-import { ScrollView, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { T } from '@/lib/theme';
+import { supabase } from '@/lib/supabase';
+import { signOut } from '@/lib/auth';
 
-const ALERTS = [
-  { icon: '✅', bg: T.greenSoft, title: 'Status changed — I-765', body: 'New Card Is Being Produced', time: 'Today, 9:41 AM' },
-  { icon: '💬', bg: T.goldSoft, title: 'Priya replied to your comment', body: '"Same! NBC seems to be moving fast this month."', time: 'Yesterday' },
-  { icon: '📰', bg: T.blueSoft, title: 'News for your forms', body: 'New USCIS fee schedule takes effect July 1', time: '2 days ago' },
-  { icon: '📈', bg: T.blueSoft, title: 'Processing time update', body: 'I-485 at NBC dropped from 12.1 → 11.5 months', time: '4 days ago' },
-];
+interface EventRow { status: string; occurred_at: string; created_at: string; cases: { nickname: string | null; form_type: string } | null; }
 
 export default function AlertsScreen() {
+  const router = useRouter();
+  const [events, setEvents] = useState<EventRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    const { data } = await supabase
+      .from('case_status_events')
+      .select('status, occurred_at, created_at, cases!inner(nickname, form_type)')
+      .order('created_at', { ascending: false })
+      .limit(30);
+    setEvents((data as unknown as EventRow[]) ?? []);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const doSignOut = () => {
+    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign out', style: 'destructive', onPress: async () => { await signOut(); router.replace('/sign-in'); } },
+    ]);
+  };
+
+  if (loading) return <View style={{ flex: 1, backgroundColor: T.paper, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator color={T.navy} /></View>;
+
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: T.paper }} contentContainerStyle={{ padding: 16 }}>
-      {ALERTS.map((a, i) => (
-        <View key={i} style={{ backgroundColor: T.card, borderWidth: 1, borderColor: T.line, borderRadius: 12, padding: 13, marginBottom: 10, flexDirection: 'row', gap: 11 }}>
-          <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: a.bg, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ fontSize: 16 }}>{a.icon}</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 13, fontWeight: '700', color: T.ink }}>{a.title}</Text>
-            <Text style={{ fontSize: 13, color: T.ink, lineHeight: 18 }}>{a.body}</Text>
-            <Text style={{ fontSize: 11, color: T.inkSoft, marginTop: 3 }}>{a.time}</Text>
-          </View>
+    <ScrollView style={{ flex: 1, backgroundColor: T.paper }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+      refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}>
+      {events.length === 0 ? (
+        <View style={{ backgroundColor: T.card, borderWidth: 1, borderColor: T.line, borderRadius: 12, padding: 18, marginBottom: 14 }}>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: T.ink, marginBottom: 6 }}>No updates yet</Text>
+          <Text style={{ fontSize: 13, color: T.inkSoft, lineHeight: 20 }}>
+            When USCIS updates the status of a case you're tracking, the change appears here and you'll
+            receive a push notification. Statuses are checked automatically several times a day.
+          </Text>
         </View>
-      ))}
+      ) : (
+        events.map((e, i) => (
+          <View key={i} style={{ backgroundColor: T.card, borderWidth: 1, borderColor: T.line, borderRadius: 12, padding: 13, marginBottom: 10, flexDirection: 'row', gap: 11 }}>
+            <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: T.greenSoft, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 16 }}>✓</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: T.ink }}>
+                {e.cases?.nickname || e.cases?.form_type || 'Your case'}
+              </Text>
+              <Text style={{ fontSize: 13, color: T.ink, lineHeight: 18 }}>{e.status}</Text>
+              <Text style={{ fontSize: 11, color: T.inkSoft, marginTop: 3 }}>{new Date(e.created_at).toLocaleString()}</Text>
+            </View>
+          </View>
+        ))
+      )}
+
+      <Text style={{ fontSize: 12, fontWeight: '700', color: T.inkSoft, letterSpacing: 0.5, textTransform: 'uppercase', marginTop: 18, marginBottom: 8 }}>Account</Text>
+      <Pressable onPress={doSignOut} style={{ backgroundColor: T.card, borderWidth: 1, borderColor: T.line, borderRadius: 12, padding: 14 }}>
+        <Text style={{ fontSize: 14, fontWeight: '600', color: T.red }}>Sign out</Text>
+      </Pressable>
     </ScrollView>
   );
 }
